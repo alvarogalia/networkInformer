@@ -24,4 +24,22 @@ public class Utils {
             }
         }
     }
+
+    public static void reboot() throws RuntimeException, IOException {
+        String shutdownCommand;
+        String operatingSystem = System.getProperty("os.name");
+
+        if ("Linux".equals(operatingSystem) || "Mac OS X".equals(operatingSystem)) {
+            shutdownCommand = "reboot";
+        }
+        else if ("Windows".equals(operatingSystem)) {
+            shutdownCommand = "reboot /r";
+        }
+        else {
+            throw new RuntimeException("Unsupported operating system.");
+        }
+
+        Runtime.getRuntime().exec(shutdownCommand);
+        System.exit(0);
+    }
 }

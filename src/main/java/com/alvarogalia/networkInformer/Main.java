@@ -1,13 +1,12 @@
 package com.alvarogalia.networkInformer;
 
-import com.alvarogalia.networkInformer.obj.Ping;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.database.*;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
@@ -37,22 +36,53 @@ public class Main {
                     Timestamp timestamp = new Timestamp(currentTimeMillis());
                     InetAddress thisIp = InetAddress.getLocalHost();
 
-                    Map<String, Object> mapPing = new HashMap<>();
-                    mapPing.put("publicIP", Utils.getIp());
-                    mapPing.put("localIP", thisIp.getHostAddress());
-                    mapPing.put("timestamp", Long.parseLong(formatLong.format(timestamp)));
-
+                    //check parameter
                     String path = "HOLDING/" + holding + "/UBICACION/" + ubicacion + "/PING/";
-                    System.out.println(path);
-                    System.out.println(Utils.getIp());
-                    System.out.println(thisIp.getHostAddress());
-                    System.out.println(Long.parseLong(formatLong.format(timestamp)));
-
                     DatabaseReference refPing = database.getReference(path);
-                    refPing.child(thisIp.getHostName()).setValue(mapPing, (databaseError, databaseReference) -> {
-                        out.println("EJECUTADO!:" + databaseError);
-                    });
+                    refPing.child(thisIp.getHostName()).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            boolean shouldReboot = false;
+                            Map<String, Object> mapPing = new HashMap<>();
+                            try{
+                                System.out.println(path);
+                                System.out.println(Utils.getIp());
+                                System.out.println(thisIp.getHostAddress());
+                                System.out.println(Long.parseLong(formatLong.format(timestamp)));
 
+                                mapPing.put("publicIP", Utils.getIp());
+                                mapPing.put("localIP", thisIp.getHostAddress());
+                                mapPing.put("timestamp", Long.parseLong(formatLong.format(timestamp)));
+                                mapPing.put("shouldReboot", false);
+
+                                for(DataSnapshot snap : dataSnapshot.getChildren()){
+                                    if(snap.getKey().equals("shouldReboot")){
+                                        shouldReboot = (boolean) snap.getValue();
+                                    }
+                                }
+                                if(shouldReboot){
+                                    mapPing.put("rebooting", true);
+
+                                }else{
+                                    mapPing.put("rebooting", false);
+                                }
+                                final boolean shouldReboot2 = shouldReboot;
+                                refPing.child(thisIp.getHostName()).setValue(mapPing, (databaseError, databaseReference) -> {
+                                    out.println("EJECUTADO!:" + databaseError);
+                                    if(shouldReboot2){
+                                        System.exit(0);
+                                    }
+                                });
+                            }catch(Exception e){
+
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
                     TimeUnit.SECONDS.sleep(60);
                 }catch(Exception e){
                     e.printStackTrace();
