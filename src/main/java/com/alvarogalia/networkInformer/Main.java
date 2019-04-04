@@ -30,7 +30,8 @@ public class Main {
                     .build();
             FirebaseApp.initializeApp(options);
 
-            String macaddress = Utils.getMacAdress();
+            final InetAddress thisIp = InetAddress.getLocalHost();
+            String macaddress = thisIp.getHostName();
             System.out.println(macaddress);
 
             final FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -55,7 +56,7 @@ public class Main {
                             System.out.println(holding + "/" + ubicacion);
                             try {
                                 Timestamp timestamp = new Timestamp(currentTimeMillis());
-                                InetAddress thisIp = InetAddress.getLocalHost();
+
 
                                 String path = "HOLDING/" + holding + "/UBICACION/" + ubicacion + "/PING/";
                                 DatabaseReference refPing = database.getReference(path);

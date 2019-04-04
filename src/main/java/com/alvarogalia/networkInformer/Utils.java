@@ -42,7 +42,7 @@ public class Utils {
     }
 
     public static String getMacAdress() throws UnknownHostException, SocketException {
-        InetAddress ip;
+            InetAddress ip;
             ip = InetAddress.getLocalHost();
             NetworkInterface network = NetworkInterface.getByInetAddress(ip);
             byte[] mac = network.getHardwareAddress();
