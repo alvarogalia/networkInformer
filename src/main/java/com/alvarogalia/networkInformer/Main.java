@@ -5,8 +5,7 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.database.*;
 
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.sql.Timestamp;
@@ -36,6 +35,32 @@ public class Main {
 
             final FirebaseDatabase database = FirebaseDatabase.getInstance();
             out.println(database.getReference("MAC/"+macaddress).toString());
+            database.getReference("MAC/" + macaddress + "/videoip").addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    File fout = new File("ip.txt");
+                    FileOutputStream fos = null;
+                    try {
+                        fos = new FileOutputStream(fout);
+                        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+                        for(DataSnapshot snap : dataSnapshot.getChildren()) {
+                            bw.write(snap.getValue().toString());
+                            bw.newLine();
+                            System.out.println("Escrito:" + snap.getValue());
+                        }
+                        bw.close();
+                    } catch (FileNotFoundException e) {
+                        System.out.println("Error:" + e.getMessage());
+                    } catch (IOException e) {
+                        System.out.println("Error:" + e.getMessage());
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
             while(true) {
                 database.getReference("MAC/" + macaddress).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -83,7 +108,6 @@ public class Main {
                                             }
                                             if (shouldReboot) {
                                                 mapPing.put("rebooting", true);
-
                                             } else {
                                                 mapPing.put("rebooting", false);
                                             }
