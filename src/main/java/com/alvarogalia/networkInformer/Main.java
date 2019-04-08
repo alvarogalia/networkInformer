@@ -1,54 +1,75 @@
 package com.alvarogalia.networkInformer;
 
+import com.alvarogalia.networkInformer.obj.Continua;
+import com.alvarogalia.networkInformer.obj.Flag;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
-import com.google.firebase.database.*;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.io.*;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static java.lang.System.*;
+import static java.lang.System.currentTimeMillis;
+import static java.lang.System.out;
 
 public class Main {
-    private static final SimpleDateFormat formatLong = new SimpleDateFormat("yyyyMMddHHmmss");
+    private static final SimpleDateFormat formatDate = new SimpleDateFormat("yyyyMMdd");
+    private static final SimpleDateFormat formatHour = new SimpleDateFormat("HHmmss");
     public static void main(String[] args){
 
         FileInputStream serviceAccount = null;
         try {
             serviceAccount = new FileInputStream("controlacceso-fc68c-firebase-adminsdk-22zra-efe9ebaead.json");
-            FirebaseOptions options = new FirebaseOptions.Builder()
-                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                    .setDatabaseUrl("https://controlacceso-fc68c.firebaseio.com/")
-                    .build();
+            FirebaseOptions options = new FirebaseOptions.Builder().setCredentials(GoogleCredentials.fromStream(serviceAccount)).setDatabaseUrl("https://controlacceso-fc68c.firebaseio.com/").build();
             FirebaseApp.initializeApp(options);
-
-            final InetAddress thisIp = InetAddress.getLocalHost();
-            String macaddress = thisIp.getHostName();
-            System.out.println(macaddress);
-
             final FirebaseDatabase database = FirebaseDatabase.getInstance();
-            out.println(database.getReference("MAC/"+macaddress).toString());
-            database.getReference("MAC/" + macaddress + "/videoip").addListenerForSingleValueEvent(new ValueEventListener() {
+            final String path = "CONFIGURACION-CAPTURADORES";
+            final InetAddress thisIp = InetAddress.getLocalHost();
+            final String hostName = thisIp.getHostName();
+            final Flag flag = new Flag();
+            int timeout = 60;
+            flag.continua = true;
+            out.println(database.getReference(path).child(hostName).toString());
+            database.getReference(path).child(hostName).child("streamIP").addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
-                    File fout = new File("ip.txt");
-                    FileOutputStream fos = null;
                     try {
-                        fos = new FileOutputStream(fout);
-                        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
-                        for(DataSnapshot snap : dataSnapshot.getChildren()) {
-                            bw.write(snap.getValue().toString());
-                            bw.newLine();
-                            System.out.println("Escrito:" + snap.getValue());
+                        long cantidad = dataSnapshot.getChildrenCount();
+                        long puntero = 0;
+
+                        if(cantidad>0){
+                            File fileOut = new File("ip.txt");
+                            FileOutputStream fos = null;
+                            fos = new FileOutputStream(fileOut);
+                            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+                            for(DataSnapshot snap : dataSnapshot.getChildren()) {
+                                puntero++;
+                                flag.ipEscrito = true;
+                                bw.write(snap.getValue().toString());
+                                if(puntero<cantidad){
+                                    bw.newLine();
+                                }
+                            }
+                            bw.close();
+                            out.println("ip.txt Escrito");
+                            Map<String, Object> mapPing = new HashMap<>();
+                            mapPing.put("INFO", "EJECUTANDO DAEMON...");
+                            database.getReference(path).child(hostName).updateChildrenAsync(mapPing);
+                        }else{
+                            File fileOut = new File("ip.txt");
+                            if(fileOut.exists()){
+                                fileOut.delete();
+                            }
                         }
-                        bw.close();
                     } catch (FileNotFoundException e) {
                         System.out.println("Error:" + e.getMessage());
                     } catch (IOException e) {
@@ -61,89 +82,57 @@ public class Main {
 
                 }
             });
-            while(true) {
-                database.getReference("MAC/" + macaddress).addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        String holding = "";
-                        String ubicacion = "";
 
-                        for (DataSnapshot snap : dataSnapshot.getChildren()) {
-                            out.println(snap);
-                            if (snap.getKey().equals("holding")) {
-                                holding = snap.getValue().toString();
-                            }
-                            if (snap.getKey().equals("ubicacion")) {
-                                ubicacion = snap.getValue().toString();
-                            }
-                        }
-                        if(holding != "" && ubicacion != "") {
-                            System.out.println(holding + "/" + ubicacion);
-                            try {
-                                Timestamp timestamp = new Timestamp(currentTimeMillis());
+            database.getReference(path).child(hostName).child("reiniciar").addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    boolean reiniciar = (boolean) dataSnapshot.getValue();
+                    Map<String, Object> mapPing = new HashMap<>();
+                    if(reiniciar){
+                        flag.reinicia = true;
+                        mapPing.put("INFO", "REINICIO SOLICITADO...");
+                        mapPing.put("reiniciar", false);
+                        database.getReference(path).child(hostName).updateChildrenAsync(mapPing);
+                    }
+                    database.getReference(path).child(hostName).updateChildrenAsync(mapPing);
+                }
 
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                    Map<String, Object> mapPing = new HashMap<>();
+                    mapPing.put("reiniciar", false);
+                    database.getReference(path).child(hostName).updateChildrenAsync(mapPing);
+                }
+            });
 
-                                String path = "HOLDING/" + holding + "/UBICACION/" + ubicacion + "/PING/";
-                                DatabaseReference refPing = database.getReference(path);
-                                refPing.child(thisIp.getHostName()).addListenerForSingleValueEvent(new ValueEventListener() {
-                                    @Override
-                                    public void onDataChange(DataSnapshot dataSnapshot) {
-                                        boolean shouldReboot = false;
-                                        Map<String, Object> mapPing = new HashMap<>();
-                                        try {
-                                            System.out.println(path);
-                                            System.out.println(Utils.getIp());
-                                            System.out.println(thisIp.getHostAddress());
-                                            System.out.println(Long.parseLong(formatLong.format(timestamp)));
+            while(flag.continua) {
+                try{
+                    Timestamp timestamp = new Timestamp(currentTimeMillis());
+                    Map<String, Object> mapPing = new HashMap<>();
 
-                                            mapPing.put("publicIP", Utils.getIp());
-                                            mapPing.put("localIP", thisIp.getHostAddress());
-                                            mapPing.put("timestamp", Long.parseLong(formatLong.format(timestamp)));
-                                            mapPing.put("shouldReboot", false);
-
-                                            for (DataSnapshot snap : dataSnapshot.getChildren()) {
-                                                if (snap.getKey().equals("shouldReboot")) {
-                                                    shouldReboot = (boolean) snap.getValue();
-                                                }
-                                            }
-                                            if (shouldReboot) {
-                                                mapPing.put("rebooting", true);
-                                            } else {
-                                                mapPing.put("rebooting", false);
-                                            }
-                                            final boolean shouldReboot2 = shouldReboot;
-                                            refPing.child(thisIp.getHostName()).setValue(mapPing, (databaseError, databaseReference) -> {
-                                                out.println("EJECUTADO!:" + databaseError);
-                                                if (shouldReboot2) {
-                                                    System.exit(0);
-                                                }
-                                            });
-                                            TimeUnit.SECONDS.sleep(10);
-                                        } catch (Exception e) {
-
-                                        }
-                                    }
-
-                                    @Override
-                                    public void onCancelled(DatabaseError databaseError) {
-
-                                    }
-                                });
-                                TimeUnit.SECONDS.sleep(30);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        }else{
-                            out.println("PARAMETROS NO ENCONTRADOS!");
+                    if(flag.reinicia){
+                        mapPing.put("INFO", "REINICIANDO...");
+                        flag.continua = false;
+                        timeout = 10;
+                    }else{
+                        if(!flag.ipEscrito){
+                            mapPing.put("INFO", "Esperando por tag streamIP/0");
                         }
                     }
+                    mapPing.put("localIP", thisIp.getHostAddress());
+                    mapPing.put("publicIP", Utils.getIp());
+                    mapPing.put("datePING", formatDate.format(timestamp));
+                    mapPing.put("hourPING", formatHour.format(timestamp));
+                    mapPing.put("ERROR", "");
+                    database.getReference(path).child(hostName).updateChildrenAsync(mapPing);
+                }catch(Exception e){
+                    out.println(database.getReference(path).child(hostName).child("ERROR").toString());
+                    Map<String, Object> mapPing = new HashMap<>();
+                    mapPing.put("ERROR", e.getMessage());
+                    database.getReference(path).child(hostName).updateChildrenAsync(mapPing);
+                }
 
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-
-                    }
-                });
-                TimeUnit.SECONDS.sleep(60);
+                TimeUnit.SECONDS.sleep(timeout);
             }
         }catch (Exception e) {
             e.printStackTrace();
