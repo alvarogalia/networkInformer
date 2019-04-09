@@ -1,6 +1,5 @@
 package com.alvarogalia.networkInformer;
 
-import com.alvarogalia.networkInformer.obj.Continua;
 import com.alvarogalia.networkInformer.obj.Flag;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
@@ -62,7 +61,7 @@ public class Main {
                             bw.close();
                             out.println("ip.txt Escrito");
                             Map<String, Object> mapPing = new HashMap<>();
-                            mapPing.put("INFO", "EJECUTANDO DAEMON...");
+                            mapPing.put("INFO_INFORMER", "EJECUTANDO DAEMON...");
                             database.getReference(path).child(hostName).updateChildrenAsync(mapPing);
                         }else{
                             File fileOut = new File("ip.txt");
@@ -90,7 +89,7 @@ public class Main {
                     Map<String, Object> mapPing = new HashMap<>();
                     if(reiniciar){
                         flag.reinicia = true;
-                        mapPing.put("INFO", "REINICIO SOLICITADO...");
+                        mapPing.put("INFO_INFORMER", "REINICIO SOLICITADO...");
                         mapPing.put("reiniciar", false);
                         database.getReference(path).child(hostName).updateChildrenAsync(mapPing);
                     }
@@ -111,24 +110,24 @@ public class Main {
                     Map<String, Object> mapPing = new HashMap<>();
 
                     if(flag.reinicia){
-                        mapPing.put("INFO", "REINICIANDO...");
+                        mapPing.put("INFO_INFORMER", "REINICIANDO...");
                         flag.continua = false;
                         timeout = 10;
                     }else{
                         if(!flag.ipEscrito){
-                            mapPing.put("INFO", "Esperando por tag streamIP/0");
+                            mapPing.put("INFO_INFORMER", "Esperando por tag streamIP/0");
                         }
                     }
                     mapPing.put("localIP", thisIp.getHostAddress());
                     mapPing.put("publicIP", Utils.getIp());
                     mapPing.put("datePING", formatDate.format(timestamp));
                     mapPing.put("hourPING", formatHour.format(timestamp));
-                    mapPing.put("ERROR", "");
+                    mapPing.put("ERROR_INFORMER", "");
                     database.getReference(path).child(hostName).updateChildrenAsync(mapPing);
                 }catch(Exception e){
-                    out.println(database.getReference(path).child(hostName).child("ERROR").toString());
+                    out.println(database.getReference(path).child(hostName).child("ERROR_INFORMER").toString());
                     Map<String, Object> mapPing = new HashMap<>();
-                    mapPing.put("ERROR", e.getMessage());
+                    mapPing.put("ERROR_INFORMER", e.getMessage());
                     database.getReference(path).child(hostName).updateChildrenAsync(mapPing);
                 }
 
