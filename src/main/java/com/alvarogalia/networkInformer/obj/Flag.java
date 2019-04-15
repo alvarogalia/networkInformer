@@ -4,4 +4,5 @@ public class Flag {
     public boolean ipEscrito = false;
     public boolean continua = false;
     public boolean reinicia = false;
+    public String ipFTP = "";
 }

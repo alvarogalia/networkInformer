@@ -1,9 +1,13 @@
 package com.alvarogalia.networkInformer;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import org.apache.commons.net.ftp.FTP;
+import org.apache.commons.net.ftp.FTPClient;
+
+import java.io.*;
 import java.net.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class Utils {
     public static String getIp() throws Exception {
@@ -51,6 +55,61 @@ public class Utils {
                 sb.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? "-" : ""));
             }
             return sb.toString();
+    }
+
+    public static String enviaFTP(String ip, int port, String username, String password, String source, String end){
+
+        InetAddress thisIp = null;
+
+        FTPClient client = new FTPClient();
+        FileInputStream fis = null;
+        String error = "";
+        try {
+            thisIp = InetAddress.getLocalHost();
+
+            client.connect(ip, port);
+            client.login(username, password);
+            client.setFileTransferMode(FTP.COMPRESSED_TRANSFER_MODE);
+            client.setFileType(FTP.BINARY_FILE_TYPE);
+            String filename = source;
+            fis = new FileInputStream(filename);
+            client.storeFile(end, fis);
+            client.logout();
+            error = "OK";
+
+        }catch(ConnectException e){
+            error = e.getMessage();
+        } catch (SocketException e) {
+            error = e.getMessage();
+        } catch (FileNotFoundException e) {
+            error = e.getMessage();
+        } catch (IOException e) {
+            error = e.getMessage();
+        } finally {
+            try {
+                TimeUnit.SECONDS.sleep(10);
+                if (fis != null) {
+                    fis.close();
+                }
+                try{
+                    //print("Borrando " + source );
+                    File file = new File(source);
+                    if(file.exists()){
+                        file.delete();
+                    }
+                }catch(Exception e){
+                    error += e.getMessage();
+                }
+                client.disconnect();
+
+            } catch (IOException e) {
+                error += e.getMessage();
+            } catch (InterruptedException e) {
+                error += e.getMessage();
+            }
+
+        }
+        return error;
     }
 
 }

@@ -35,6 +35,19 @@ public class Main {
             final InetAddress thisIp = InetAddress.getLocalHost();
             final String hostName = thisIp.getHostName();
             final Flag flag = new Flag();
+            database.getReference(path).child("DESKTOP-0TH4HNH").child("publicIP").addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    flag.ipFTP = dataSnapshot.getValue().toString();
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+
+
             int timeout = 60;
             flag.continua = true;
             out.println(database.getReference(path).child(hostName).toString());
@@ -125,12 +138,31 @@ public class Main {
                     mapPing.put("ERROR_INFORMER", "");
                     database.getReference(path).child(hostName).updateChildrenAsync(mapPing);
                 }catch(Exception e){
-                    out.println(database.getReference(path).child(hostName).child("ERROR_INFORMER").toString());
+                    e.printStackTrace();
                     Map<String, Object> mapPing = new HashMap<>();
                     mapPing.put("ERROR_INFORMER", e.getMessage());
                     database.getReference(path).child(hostName).updateChildrenAsync(mapPing);
                 }
 
+                try{
+                    File file = new File("salida/");
+                    int cantidad = file.listFiles().length;
+
+                    Map<String, Object> mapPing = new HashMap<>();
+                    mapPing.put("INFO_FTP", "ENVIANDO " + cantidad + " imagenes a ip " + flag.ipFTP);
+                    database.getReference(path).child(hostName).updateChildrenAsync(mapPing);
+
+                    for(File child : file.listFiles()){
+                        if(child.exists()){
+                            String salida = Utils.enviaFTP(flag.ipFTP, 21, "Alvaro", "Alvarito3.", "salida/"+child.getName(), child.getName());
+                            Map<String, Object> mapPing2 = new HashMap<>();
+                            mapPing2.put("INFO_FTP2", salida + child.getName());
+                            database.getReference(path).child(hostName).updateChildrenAsync(mapPing2);
+                        }
+                    }
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
                 TimeUnit.SECONDS.sleep(timeout);
             }
         }catch (Exception e) {
