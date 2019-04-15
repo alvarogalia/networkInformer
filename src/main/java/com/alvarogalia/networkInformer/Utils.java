@@ -5,8 +5,6 @@ import org.apache.commons.net.ftp.FTPClient;
 
 import java.io.*;
 import java.net.*;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class Utils {
@@ -68,14 +66,23 @@ public class Utils {
             thisIp = InetAddress.getLocalHost();
 
             client.connect(ip, port);
-            client.login(username, password);
-            client.setFileTransferMode(FTP.COMPRESSED_TRANSFER_MODE);
-            client.setFileType(FTP.BINARY_FILE_TYPE);
-            String filename = source;
-            fis = new FileInputStream(filename);
-            client.storeFile(end, fis);
-            client.logout();
-            error = "OK";
+            if (client.login(username, password)) {
+                client.setFileTransferMode(FTP.STREAM_TRANSFER_MODE);
+                client.setFileType(FTP.BINARY_FILE_TYPE);
+                client.enterLocalPassiveMode();
+                client.enterRemotePassiveMode();
+                String filename = source;
+                fis = new FileInputStream(filename);
+                if (client.storeFile(end, fis)) {
+                    error = "OK";
+                } else {
+                    error = "NOTOK";
+                }
+                client.logout();
+            } else {
+                error = "LOGIN ERROR";
+            }
+
 
         }catch(ConnectException e){
             error = e.getMessage();

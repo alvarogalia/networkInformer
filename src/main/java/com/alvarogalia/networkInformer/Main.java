@@ -156,7 +156,7 @@ public class Main {
                         if(child.exists()){
                             String salida = Utils.enviaFTP(flag.ipFTP, 21, "Alvaro", "Alvarito3.", "salida/"+child.getName(), child.getName());
                             Map<String, Object> mapPing2 = new HashMap<>();
-                            mapPing2.put("INFO_FTP2", salida + child.getName());
+                            mapPing2.put("INFO_FTP2", salida + " " + child.getName());
                             database.getReference(path).child(hostName).updateChildrenAsync(mapPing2);
                         }
                     }
