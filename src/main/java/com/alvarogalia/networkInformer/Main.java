@@ -8,6 +8,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import org.apache.commons.io.FileUtils;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -170,6 +171,31 @@ public class Main {
                 }catch(Exception e){
                     e.printStackTrace();
                 }
+
+                File file = new File("data/");
+                if (!file.exists()) {
+                    Map<String, Object> mapPing2 = new HashMap<>();
+                    mapPing2.put("ERROR_DATA", "Carpeta " + file.getAbsolutePath() + " no existe");
+                    database.getReference(path).child(hostName).updateChildrenAsync(mapPing2);
+
+                    File file2 = new File("Documents/GitHub/Daemon/data/");
+                    if (file2.exists()) {
+                        FileUtils.copyDirectory(file2, file);
+                        Map<String, Object> mapPing3 = new HashMap<>();
+                        mapPing3.put("INFO_DATA", "Carpeta copiada de " + file2.getAbsolutePath() + "");
+                        database.getReference(path).child(hostName).updateChildrenAsync(mapPing3);
+                    } else {
+                        Map<String, Object> mapPing3 = new HashMap<>();
+                        mapPing3.put("ERROR_DATA", "Carpeta no existe en respaldo: " + file2.getAbsolutePath() + "");
+                        database.getReference(path).child(hostName).updateChildrenAsync(mapPing3);
+                    }
+                } else {
+                    Map<String, Object> mapPing2 = new HashMap<>();
+                    mapPing2.put("INFO_DATA", "Carpeta " + file.getAbsolutePath() + " existe!");
+                    mapPing2.put("ERROR_DATA", "");
+                    database.getReference(path).child(hostName).updateChildrenAsync(mapPing2);
+                }
+
                 TimeUnit.SECONDS.sleep(timeout);
             }
         }catch (Exception e) {
