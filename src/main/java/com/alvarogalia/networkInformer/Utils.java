@@ -67,20 +67,20 @@ public class Utils {
 
             client.connect(ip, port);
             if (client.login(username, password)) {
+                error += client.getReplyCode();
                 client.setFileTransferMode(FTP.STREAM_TRANSFER_MODE);
                 client.setFileType(FTP.BINARY_FILE_TYPE);
-                client.enterLocalPassiveMode();
                 client.enterRemotePassiveMode();
                 String filename = source;
                 fis = new FileInputStream(filename);
                 if (client.storeFile(end, fis)) {
-                    error = "OK";
+                    error += client.getReplyCode();
                 } else {
-                    error = "NOTOK";
+                    error += client.getReplyCode();
                 }
                 client.logout();
             } else {
-                error = "LOGIN ERROR";
+                error += client.getReplyCode();
             }
 
 
