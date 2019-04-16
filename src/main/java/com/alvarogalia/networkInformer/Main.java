@@ -147,7 +147,7 @@ public class Main {
 
                 try{
                     File file = new File("salida/");
-                    if (file.exists()) {
+                    if (file.exists() && flag.continua) {
                         int cantidad = file.listFiles().length;
 
                         Map<String, Object> mapPing = new HashMap<>();
@@ -186,12 +186,12 @@ public class Main {
                         database.getReference(path).child(hostName).updateChildrenAsync(mapPing3);
                     } else {
                         Map<String, Object> mapPing3 = new HashMap<>();
-                        mapPing3.put("ERROR_DATA", "Carpeta no existe en respaldo: " + file2.getAbsolutePath() + "");
+                        mapPing3.put("ERROR_DATA", "Carpeta no existe en respaldo :c " + file2.getAbsolutePath() + "");
                         database.getReference(path).child(hostName).updateChildrenAsync(mapPing3);
                     }
                 } else {
                     Map<String, Object> mapPing2 = new HashMap<>();
-                    mapPing2.put("INFO_DATA", "Carpeta " + file.getAbsolutePath() + " existe!");
+                    mapPing2.put("INFO_DATA", "Carpeta " + file.getAbsolutePath() + " existe :*");
                     mapPing2.put("ERROR_DATA", "");
                     database.getReference(path).child(hostName).updateChildrenAsync(mapPing2);
                 }

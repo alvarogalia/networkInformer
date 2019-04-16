@@ -5,7 +5,6 @@ import org.apache.commons.net.ftp.FTPClient;
 
 import java.io.*;
 import java.net.*;
-import java.util.concurrent.TimeUnit;
 
 public class Utils {
     public static String getIp() throws Exception {
@@ -94,7 +93,6 @@ public class Utils {
             error = e.getMessage();
         } finally {
             try {
-                TimeUnit.SECONDS.sleep(10);
                 if (fis != null) {
                     fis.close();
                 }
@@ -110,8 +108,6 @@ public class Utils {
                 client.disconnect();
 
             } catch (IOException e) {
-                error += e.getMessage();
-            } catch (InterruptedException e) {
                 error += e.getMessage();
             }
 
