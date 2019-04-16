@@ -70,17 +70,17 @@ public class Utils {
                 error += client.getReplyCode();
                 client.setFileTransferMode(FTP.STREAM_TRANSFER_MODE);
                 client.setFileType(FTP.BINARY_FILE_TYPE);
-                client.enterRemotePassiveMode();
+                client.enterLocalPassiveMode();
                 String filename = source;
                 fis = new FileInputStream(filename);
                 if (client.storeFile(end, fis)) {
-                    error += client.getReplyCode();
+                    error += "-OK" + client.getReplyCode();
                 } else {
-                    error += client.getReplyCode();
+                    error += "-NOOK" + client.getReplyCode();
                 }
                 client.logout();
             } else {
-                error += client.getReplyCode();
+                error += "-LOG" + client.getReplyCode();
             }
 
 
