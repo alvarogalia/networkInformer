@@ -48,6 +48,18 @@ public class Main {
                 }
             });
 
+            database.getReference(path).child(hostName).child("enviaFTP").addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    flag.enviaFTP = (boolean) dataSnapshot.getValue();
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+
 
             int timeout = 60;
             flag.continua = true;
@@ -106,6 +118,7 @@ public class Main {
                         mapPing.put("INFO_INFORMER", "REINICIO SOLICITADO...");
                         mapPing.put("reiniciar", false);
                         database.getReference(path).child(hostName).updateChildrenAsync(mapPing);
+                        flag.continua = false;
                     }
                     database.getReference(path).child(hostName).updateChildrenAsync(mapPing);
                 }
@@ -150,17 +163,24 @@ public class Main {
                     if (file.exists() && flag.continua) {
                         int cantidad = file.listFiles().length;
 
-                        Map<String, Object> mapPing = new HashMap<>();
-                        mapPing.put("INFO_FTP", "ENVIANDO " + cantidad + " imagenes a ip " + flag.ipFTP);
-                        database.getReference(path).child(hostName).updateChildrenAsync(mapPing);
+                        if (flag.enviaFTP) {
+                            Map<String, Object> mapPing = new HashMap<>();
+                            mapPing.put("INFO_FTP", "ENVIANDO " + cantidad + " imagenes a ip " + flag.ipFTP);
+                            database.getReference(path).child(hostName).updateChildrenAsync(mapPing);
 
-                        for (File child : file.listFiles()) {
-                            if (child.exists() && flag.continua) {
-                                String salida = Utils.enviaFTP(flag.ipFTP, 21, "Alvaro", "Alvarito3.", "salida/" + child.getName(), child.getName());
-                                Map<String, Object> mapPing2 = new HashMap<>();
-                                mapPing2.put("INFO_FTP2", salida + " " + child.getName());
-                                database.getReference(path).child(hostName).updateChildrenAsync(mapPing2);
+                            for (File child : file.listFiles()) {
+                                if (child.exists() && flag.continua) {
+                                    String salida = Utils.enviaFTP(flag.ipFTP, 21, "Alvaro", "Alvarito3.", "salida/" + child.getName(), child.getName(), flag.enviaFTP);
+                                    Map<String, Object> mapPing2 = new HashMap<>();
+                                    mapPing2.put("INFO_FTP2", salida + " " + child.getName());
+                                    database.getReference(path).child(hostName).updateChildrenAsync(mapPing2);
+                                }
                             }
+                        } else {
+                            String salida = "flag enviaFTP false";
+                            Map<String, Object> mapPing2 = new HashMap<>();
+                            mapPing2.put("INFO_FTP2", salida);
+                            database.getReference(path).child(hostName).updateChildrenAsync(mapPing2);
                         }
                     } else {
                         Map<String, Object> mapPing2 = new HashMap<>();

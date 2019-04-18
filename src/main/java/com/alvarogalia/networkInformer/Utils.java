@@ -54,35 +54,31 @@ public class Utils {
             return sb.toString();
     }
 
-    public static String enviaFTP(String ip, int port, String username, String password, String source, String end){
-
-        InetAddress thisIp = null;
-
+    public static String enviaFTP(String ip, int port, String username, String password, String source, String end, boolean enviaEfectivamente) {
         FTPClient client = new FTPClient();
         FileInputStream fis = null;
         String error = "";
         try {
-            thisIp = InetAddress.getLocalHost();
 
-            client.connect(ip, port);
-            if (client.login(username, password)) {
-                error += client.getReplyCode();
-                client.setFileTransferMode(FTP.STREAM_TRANSFER_MODE);
-                client.setFileType(FTP.BINARY_FILE_TYPE);
-                client.enterLocalPassiveMode();
-                String filename = source;
-                fis = new FileInputStream(filename);
-                if (client.storeFile(end, fis)) {
-                    error += "-OK" + client.getReplyCode();
+            if (enviaEfectivamente) {
+                client.connect(ip, port);
+                if (client.login(username, password)) {
+                    error += client.getReplyCode();
+                    client.setFileTransferMode(FTP.STREAM_TRANSFER_MODE);
+                    client.setFileType(FTP.BINARY_FILE_TYPE);
+                    client.enterLocalPassiveMode();
+                    String filename = source;
+                    fis = new FileInputStream(filename);
+                    if (client.storeFile(end, fis)) {
+                        error += "-OK" + client.getReplyCode();
+                    } else {
+                        error += "-NOOK" + client.getReplyCode();
+                    }
+                    client.logout();
                 } else {
-                    error += "-NOOK" + client.getReplyCode();
+                    error += "-LOG" + client.getReplyCode();
                 }
-                client.logout();
-            } else {
-                error += "-LOG" + client.getReplyCode();
             }
-
-
         }catch(ConnectException e){
             error = e.getMessage();
         } catch (SocketException e) {
