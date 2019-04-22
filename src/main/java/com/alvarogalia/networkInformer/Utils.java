@@ -5,6 +5,7 @@ import org.apache.commons.net.ftp.FTPClient;
 
 import java.io.*;
 import java.net.*;
+import java.util.Objects;
 
 public class Utils {
     public static String getIp() throws Exception {
@@ -111,4 +112,18 @@ public class Utils {
         return error;
     }
 
+    public static File lastFileModified(String dir) {
+        File fl = new File(dir);
+        File[] files = fl.listFiles(pathname -> pathname.getName().toUpperCase().endsWith(".JPG"));
+        long lastMod = Long.MAX_VALUE;
+        File choice = null;
+        for (File file : Objects.requireNonNull(files)) {
+            long fileName = Long.parseLong(file.getName().split("_")[0]);
+            if (fileName < lastMod) {
+                choice = file;
+                lastMod = file.lastModified();
+            }
+        }
+        return choice;
+    }
 }

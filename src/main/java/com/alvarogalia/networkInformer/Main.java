@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static com.alvarogalia.networkInformer.Utils.lastFileModified;
 import static java.lang.System.currentTimeMillis;
 import static java.lang.System.out;
 
@@ -170,6 +171,7 @@ public class Main {
 
                             for (File child : file.listFiles()) {
                                 if (child.exists() && flag.continua) {
+                                    child = lastFileModified(file.getPath());
                                     String salida = Utils.enviaFTP(flag.ipFTP, 21, "Alvaro", "Alvarito3.", "salida/" + child.getName(), child.getName(), flag.enviaFTP);
                                     Map<String, Object> mapPing2 = new HashMap<>();
                                     mapPing2.put("INFO_FTP2", salida + " " + child.getName());
