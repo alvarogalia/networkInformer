@@ -169,12 +169,14 @@ public class Main {
                             mapPing.put("INFO_FTP", "ENVIANDO " + cantidad + " imagenes a ip " + flag.ipFTP);
                             database.getReference(path).child(hostName).updateChildrenAsync(mapPing);
 
-                            for (File child : file.listFiles()) {
-                                if (child.exists() && flag.continua) {
-                                    child = lastFileModified(file.getPath());
-                                    String salida = Utils.enviaFTP(flag.ipFTP, 21, "Alvaro", "Alvarito3.", "salida/" + child.getName(), child.getName(), flag.enviaFTP);
+
+
+                            for (File ignored : file.listFiles(pathname -> pathname.getName().toUpperCase().endsWith(".JPG"))) {
+                                File fileToSend = lastFileModified(file.getPath());
+                                if (fileToSend.exists() && flag.continua) {
+                                    String salida = Utils.enviaFTP(flag.ipFTP, 21, "Alvaro", "Alvarito3.", "salida/" + fileToSend.getName(), fileToSend.getName(), flag.enviaFTP);
                                     Map<String, Object> mapPing2 = new HashMap<>();
-                                    mapPing2.put("INFO_FTP2", salida + " " + child.getName());
+                                    mapPing2.put("INFO_FTP2", salida + " " + fileToSend.getName());
                                     database.getReference(path).child(hostName).updateChildrenAsync(mapPing2);
                                 }
                             }
