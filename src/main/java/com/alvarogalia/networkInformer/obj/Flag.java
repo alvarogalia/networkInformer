@@ -6,5 +6,5 @@ public class Flag {
     public boolean reinicia = false;
     public String ipFTP = "";
     public boolean enviaFTP = false;
-    public int timeout;
+    public int timeout = 60;
 }
