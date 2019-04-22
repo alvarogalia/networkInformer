@@ -62,7 +62,7 @@ public class Main {
             });
 
 
-            int timeout = 60;
+            int timeout = 10;
             flag.continua = true;
             out.println(database.getReference(path).child(hostName).toString());
             database.getReference(path).child(hostName).child("streamIP").addValueEventListener(new ValueEventListener() {
