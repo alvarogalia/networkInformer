@@ -60,9 +60,20 @@ public class Main {
 
                 }
             });
+            database.getReference(path).child(hostName).child("timeoutInformer").addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    flag.timeout = (int) dataSnapshot.getValue();
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
 
 
-            int timeout = 10;
+
             flag.continua = true;
             out.println(database.getReference(path).child(hostName).toString());
             database.getReference(path).child(hostName).child("streamIP").addValueEventListener(new ValueEventListener() {
@@ -133,14 +144,14 @@ public class Main {
             });
 
             while(flag.continua) {
+                Timestamp timestamp = new Timestamp(currentTimeMillis());
                 try{
-                    Timestamp timestamp = new Timestamp(currentTimeMillis());
                     Map<String, Object> mapPing = new HashMap<>();
 
                     if(flag.reinicia){
                         mapPing.put("INFO_INFORMER", "REINICIANDO...");
                         flag.continua = false;
-                        timeout = 10;
+                        flag.timeout = 0;
                     }else{
                         if(!flag.ipEscrito){
                             mapPing.put("INFO_INFORMER", "Esperando por tag streamIP/0");
@@ -220,7 +231,10 @@ public class Main {
                     database.getReference(path).child(hostName).updateChildrenAsync(mapPing2);
                 }
 
-                TimeUnit.SECONDS.sleep(timeout);
+                Timestamp timestamp2 = new Timestamp(currentTimeMillis());
+                long diff = timestamp2.getTime()-timestamp.getTime();
+                int timeout2 = (int) (flag.timeout - diff);
+                TimeUnit.MILLISECONDS.sleep(timeout2);
             }
         }catch (Exception e) {
             e.printStackTrace();
