@@ -233,8 +233,9 @@ public class Main {
 
                 Timestamp timestamp2 = new Timestamp(currentTimeMillis());
                 long diff = timestamp2.getTime()-timestamp.getTime();
-                int timeout2 = (int) (flag.timeout - diff);
-                TimeUnit.MILLISECONDS.sleep(60);
+                int timeout2 = (int) (flag.timeout-diff);
+                System.out.println(timeout2);
+                TimeUnit.MILLISECONDS.sleep(timeout2);
             }
         }catch (Exception e) {
             e.printStackTrace();
