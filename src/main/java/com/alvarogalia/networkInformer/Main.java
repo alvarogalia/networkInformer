@@ -175,28 +175,21 @@ public class Main {
                     if (file.exists() && flag.continua) {
                         int cantidad = file.listFiles().length;
 
-                        if (flag.enviaFTP) {
                             Map<String, Object> mapPing = new HashMap<>();
                             mapPing.put("INFO_FTP", "ENVIANDO " + cantidad + " imagenes a ip " + flag.ipFTP);
                             database.getReference(path).child(hostName).updateChildrenAsync(mapPing);
 
 
-
-                            for (File ignored : file.listFiles(pathname -> pathname.getName().toUpperCase().endsWith(".JPG"))) {
-                                File fileToSend = lastFileModified(file.getPath());
-                                if (fileToSend.exists() && flag.continua) {
-                                    String salida = Utils.enviaFTP(flag.ipFTP, 21, "Alvaro", "Alvarito3.", "salida/" + fileToSend.getName(), fileToSend.getName(), flag.enviaFTP);
-                                    Map<String, Object> mapPing2 = new HashMap<>();
-                                    mapPing2.put("INFO_FTP2", salida + " " + fileToSend.getName());
-                                    database.getReference(path).child(hostName).updateChildrenAsync(mapPing2);
-                                }
+                        for (File ignored : file.listFiles(pathname -> pathname.getName().toUpperCase().endsWith(".JPG"))) {
+                            File fileToSend = lastFileModified(file.getPath());
+                            if (fileToSend.exists() && flag.continua) {
+                                String salida = Utils.enviaFTP(flag.ipFTP, 21, "Alvaro", "Alvarito3.", "salida/" + fileToSend.getName(), fileToSend.getName(), flag.enviaFTP);
+                                Map<String, Object> mapPing2 = new HashMap<>();
+                                mapPing2.put("INFO_FTP2", salida + " " + fileToSend.getName());
+                                database.getReference(path).child(hostName).updateChildrenAsync(mapPing2);
                             }
-                        } else {
-                            String salida = "flag enviaFTP false";
-                            Map<String, Object> mapPing2 = new HashMap<>();
-                            mapPing2.put("INFO_FTP2", salida);
-                            database.getReference(path).child(hostName).updateChildrenAsync(mapPing2);
                         }
+
                     } else {
                         Map<String, Object> mapPing2 = new HashMap<>();
                         mapPing2.put("INFO_FTP", "Carpeta " + file.getAbsolutePath() + " no existe");
