@@ -128,6 +128,14 @@ public class Main {
                     if(reiniciar){
                         flag.reinicia = true;
                         mapPing.put("INFO_INFORMER", "REINICIO SOLICITADO...");
+                        mapPing.put("CONNECTED_TO", "");
+                        mapPing.put("ERROR_DAEMON", "");
+                        mapPing.put("ERROR_DATA", "");
+                        mapPing.put("ERROR_INFORMER", "");
+                        mapPing.put("INFO_DAEMON", "");
+                        mapPing.put("INFO_DATA", "");
+                        mapPing.put("INFO_FTP", "");
+                        mapPing.put("INFO_FTP2", "");
                         mapPing.put("reiniciar", false);
                         database.getReference(path).child(hostName).updateChildrenAsync(mapPing);
                         flag.continua = false;
